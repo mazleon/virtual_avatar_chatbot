@@ -33,11 +33,6 @@ function SimpleApp() {
   const [volume, setVolume] = useState(0);
   const [textInput, setTextInput] = useState('');
   
-  // LiveKit state
-  const [token, setToken] = useState(null);
-  const [connected, setConnected] = useState(false);
-  const [roomError, setRoomError] = useState(null);
-  
   // Refs
   const timerRef = useRef(null);
   const animationRef = useRef(null);
@@ -45,35 +40,9 @@ function SimpleApp() {
   const audioDataRef = useRef(null);
   const messagesEndRef = useRef(null);
   
-  // Fetch LiveKit token
-  const fetchToken = async () => {
-    try {
-      // In a production app, you would fetch this from your token server
-      // For now, we'll use a hardcoded token for testing
-      const response = await fetch(`${TOKEN_ENDPOINT}?room=${ROOM_NAME}&identity=${PARTICIPANT_NAME}`);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch token: ${response.status} ${response.statusText}`);
-      }
-      const data = await response.json();
-      setToken(data.token);
-      addMessage('System', 'LiveKit token acquired. Connecting to voice room...');
-    } catch (error) {
-      console.error('Error fetching token:', error);
-      setRoomError(error.message);
-      addMessage('System', `Error connecting to LiveKit: ${error.message}`);
-      
-      // For development, generate a temporary token
-      // This is just for testing - in production, always use a secure token server
-      const tempToken = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3MTQ5NTI2MzYsImlzcyI6ImRldmtleSIsIm5hbWUiOiJ1c2VyIiwibmJmIjoxNzE0ODY2MjM2LCJzdWIiOiJ1c2VyIiwidmlkZW8iOnsicm9vbSI6InZvaWNlLWFnZW50LXJvb20iLCJyb29tSm9pbiI6dHJ1ZX19.Ld_kYlxRUMDrJQPP_kTQJ2xC5Xj2M3Q3EPJ8Fy-Bmtg';
-      setToken(tempToken);
-      addMessage('System', 'Using development token for testing.');
-    }
-  };
-  
-  // Check API connection and fetch token on mount
+  // Check API connection on mount
   useEffect(() => {
     checkApiConnection();
-    fetchToken();
     
     // Clean up on unmount
     return () => {
@@ -394,47 +363,13 @@ function SimpleApp() {
     }
   };
   
-  // Handle LiveKit room connection events
-  const handleRoomConnected = () => {
-    setConnected(true);
-    addMessage('System', 'Connected to voice room. You can now speak with the AI assistant.');
-  };
-  
-  const handleRoomDisconnected = () => {
-    setConnected(false);
-    addMessage('System', 'Disconnected from voice room.');
-  };
-  
-  const handleRoomError = (error) => {
-    setRoomError(error.message);
-    addMessage('System', `LiveKit error: ${error.message}`);
-  };
-  
   // Render the UI
   return (
     <div className="app-container">
-      {token && (
-        <LiveKitRoom
-          serverUrl={LIVEKIT_URL}
-          token={token}
-          connect={true}
-          connectOptions={{ autoSubscribe: true }}
-          onConnected={handleRoomConnected}
-          onDisconnected={handleRoomDisconnected}
-          onError={handleRoomError}
-          className="livekit-container"
-        >
-          <AudioRenderer />
-        </LiveKitRoom>
-      )}
-      
       <div className="main-layout">
         <div className="avatar-section">
           <div className="title-bar">
             <h1>{BANK_NAME}</h1>
-            {connected && <div className="connection-status connected">LiveKit Connected</div>}
-            {!connected && token && <div className="connection-status connecting">Connecting to LiveKit...</div>}
-            {!token && <div className="connection-status disconnected">LiveKit Disconnected</div>}
           </div>
           
           <div className="avatar-container">

@@ -156,3 +156,4 @@ frontend/out/
 
 # Cache
 .cache/
+.env
